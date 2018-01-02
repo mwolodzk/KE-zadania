@@ -253,9 +253,9 @@ class Rozwiazanie:
 			poleE.append(self.obwod.E(punkt))
 		return poleE
 		
-	def rysujRozwiazanie(self):
-		'Rysuje rozwiązanie zadania pierwszego na wykresie polarnym.'
-		return 0.0
+	#def rysujRozwiazanie(self):
+		#'Rysuje rozwiązanie zadania pierwszego na wykresie polarnym.'
+		#return 0.0
 		
 # Przydatne narzędzia
 def transponuj(macierz):
@@ -264,7 +264,11 @@ def transponuj(macierz):
 
 if __name__ == '__main__':
 	
-	rozwiazanie = Rozwiazanie(30.0E4)
+	print("W jakiej odległości od promieniującego obwodu obliczyć pole E? (np. 30.0E4)")
+	odleglosc = float(input("Podaj wartość w metrach [m]: "))
+	print("")
+	
+	rozwiazanie = Rozwiazanie(r=odleglosc)
 	
 	dane = rozwiazanie.poleE()
 	dane = transponuj(dane)
