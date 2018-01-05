@@ -16,6 +16,7 @@
 from math import log,pi
 import matplotlib.pyplot as plt
 import numpy as np
+import visual as v
 
 class Constants:
     """Stałe potrzebne do jednoznacznego rozwiązania zadania."""
@@ -232,6 +233,17 @@ class Rozwiazanie:
             self.fala.f = f
             Vfe.append(self.linia.Vfe(self.fala))
         return Vfe
+        
+#class Rysownik:
+    #"""
+    #Klasa obiektów obsługujących graficzną reprezentację zadania drugiego.
+    #Rysownik rysuje zależności napięć na obciążeniach od częstotliwości podanej fali padającej
+    #oraz rysuje schemat padania fali na badany układ przewodów.
+    #"""
+    
+    #def __init__(self,rozwiazanie):
+        #'Inicjuj wszystkie dane potrzebne rysownikowi.'
+        #self.
 
 # Przydatne narzędzia
 def amplitudy(listaWartosciZespolonych):
@@ -240,21 +252,102 @@ def amplitudy(listaWartosciZespolonych):
     for wartosc in listaWartosciZespolonych:
         absolutne.append(abs(wartosc))
     return absolutne
-
-if __name__ == '__main__':
     
-    rozwiazanie = Rozwiazanie()
+def rysujSytuacje(liniaTEM,falaPadajaca,tytul):
+    """
+    Rysuje schemat oświetlania linii TEM 2-przewodowej przez falę płaską.
+    Pokazany jest kąt pod jakim fala płaska pada na linię.
+    """
+    # Otwórz nowe okienko graficzne
+    ekran = v.display(\
+        title = tytul,\
+        width=1300,\
+        height = 600)
+    v.label(\
+        pos = v.vector(0,0,0),\
+        yoffset=220,\
+        text = tytul,\
+        box = False,\
+        line = False,\
+        height = 30)
+    # Linia TEM 2-przewodowa
+    skalowanie = 1.0
+    skrocenieB = 0.05
+    for n,segment in enumerate(liniaTEM.segmenty):
+        # Przewody linii TEM
+        v.cylinder(\
+            pos = v.vector(\
+                n*segment.B*skrocenieB*skalowanie,\
+                0.0,\
+                0.0),\
+            axis = v.vector(\
+                segment.kierunek.x*segment.B*skrocenieB*skalowanie,\
+                segment.kierunek.y*segment.B*skrocenieB*skalowanie,\
+                segment.kierunek.z*segment.B*skrocenieB*skalowanie),\
+            radius = skalowanie*segment.d/2.0\
+        )
+        v.cylinder(\
+            pos = v.vector(\
+                n*segment.B*skrocenieB*skalowanie,\
+                0.0,\
+                -segment.s*skalowanie),\
+            axis = v.vector(\
+                segment.kierunek.x*segment.B*skrocenieB*skalowanie,\
+                segment.kierunek.y*segment.B*skrocenieB*skalowanie,\
+                segment.kierunek.z*segment.B*skrocenieB*skalowanie),\
+            radius = skalowanie*segment.d/2.0\
+        )    
+    # Fala płaska
+    skalowanie = liniaTEM.SegmentTEM.B*skalowanie*skrocenieB/2.0
+    przesuniecieFali = v.vector(\
+        1.0 * skalowanie,\
+        -3.0 * skalowanie,\
+        0.0 * skalowanie)
+    k = v.arrow(\
+        pos = przesuniecieFali,\
+        axis = v.vector(\
+            falaPadajaca.k.x*skalowanie,\
+            falaPadajaca.k.y*skalowanie,\
+            falaPadajaca.k.z*skalowanie),\
+        color=v.color.red,\
+        shaftwidth = skalowanie)
+    v.label(\
+        pos = k.pos + k.axis,\
+        text = 'k',\
+        yoffset=50,\
+        xoffset=30,\
+        box=False)
+    E = v.arrow(\
+        pos = przesuniecieFali,\
+        axis = v.vector(\
+            falaPadajaca.E.x*skalowanie,\
+            falaPadajaca.E.y*skalowanie,\
+            falaPadajaca.E.z*skalowanie),\
+        color=v.color.blue,\
+        shaftwidth = skalowanie)
+    v.label(\
+        pos = E.pos + E.axis,\
+        text = 'E',\
+        yoffset=50,\
+        xoffset=30,\
+        box=False)
+    H = v.arrow(\
+        pos = przesuniecieFali,\
+        axis = v.vector(\
+            falaPadajaca.H.x*skalowanie,\
+            falaPadajaca.H.y*skalowanie,\
+            falaPadajaca.H.z*skalowanie),\
+        color=v.color.green,\
+        shaftwidth = skalowanie)
+    v.label(\
+        pos = H.pos + H.axis,\
+        text = 'H',\
+        yoffset=50,\
+        xoffset=30,\
+        box=False)
     
-    # Z uwagi na niejasność orientacji fali padającej i obwodu oświetlanego.
-    fala = FalaPlaska(\
-            k = UkladKartezjanski(x = 1.0, y = 1.0, z = 1.0),\
-            E = UkladKartezjanski(x = -0.5, y = -0.5, z = 1.0),\
-            H = UkladKartezjanski(x = -1.0, y = 1.0, z = 0.0),\
-            f = rozwiazanie.fmin
-    )
-    rozwiazanie.fala = fala
-    rozwiazanie.Rne = 573.0
-    # ---------------------------------------------
+def rysujOdpowiedzLiniiTEM(rozwiazanie,tytul):
+    'Rysuje odpowiedź linii TEM 2-przewodowej na pobudzenie falą płaską.'
     
     Vne = rozwiazanie.Vne()
     Vfe = rozwiazanie.Vfe()
@@ -276,7 +369,7 @@ if __name__ == '__main__':
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
     plt.legend(loc='upper center')
     
-    plt.title('Napiecia indukowane na obciazeniach')
+    plt.title(tytul)
     
     plt.subplot(212)
     plt.plot(f,Vfe,label='Napiecie na Rfe')
@@ -284,6 +377,31 @@ if __name__ == '__main__':
     plt.xlabel('f [Hz]')
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
     plt.legend(loc='upper center')
+
+
+if __name__ == '__main__':
+    
+    rozwiazanie = Rozwiazanie()
+    
+    # Z uwagi na niejasność orientacji fali padającej i obwodu oświetlanego.
+    fala = FalaPlaska(\
+            k = UkladKartezjanski(x = 1.0, y = 1.0, z = 1.0),\
+            E = UkladKartezjanski(x = -0.5, y = -0.5, z = 1.0),\
+            H = UkladKartezjanski(x = -1.0, y = 1.0, z = 0.0),\
+            f = rozwiazanie.fmin
+    )
+    rozwiazanie.fala = fala
+    #rozwiazanie.Rne = 573.0
+    # ---------------------------------------------
+    
+    rysujSytuacje(rozwiazanie.linia, rozwiazanie.fala, 'Fala pierwsza')
+    rysujOdpowiedzLiniiTEM(rozwiazanie,'[Fala pierwsza] Napiecia indukowane na obciazeniach')
+    
+    # ---------------------------------------------
+    rozwiazanie = Rozwiazanie()
+    
+    rysujSytuacje(rozwiazanie.linia, rozwiazanie.fala, 'Fala druga')
+    rysujOdpowiedzLiniiTEM(rozwiazanie,'[Fala druga] Napiecia indukowane na obciazeniach')
+    
     
     plt.show()
-    
